@@ -8,7 +8,11 @@
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 #--------------------------
 
+<<<<<<< HEAD
 title: y                          # the main title
+=======
+title: Cjjjjjj                          # the main title
+>>>>>>> e419680420238e72b3a0c5d7102db2225d3a4a46
 
 tagline: A ted Jekyll theme.  # it will display as the sub-title
 
