@@ -1,8 +1,8 @@
 ---
-title:  《Art in Detail》Susie Hodge
-date:  2017-08-17
-categories:  [书, 书评]
-tags:  [绘画]
+title: 《Art in Detail》Susie Hodge
+date: 2017-08-17
+categories: [书,书评]
+tags: [绘画]
 ---
 
 ![img](https://tva1.sinaimg.cn/large/007S8ZIlgy1gjtuax1lhxj30u00vk000.jpg)
