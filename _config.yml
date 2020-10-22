@@ -16,10 +16,10 @@ author: shawn                  # change to your full name
 avatar: /assets/img/sample/avatar.jpg   # support internet resources
 
 github:
-  username: shawnyeung             # change to your github username
+  username: 1725058437             # change to your github username
 
 twitter:
-  username: yeungshawn            # change to your twitter username
+  username: yeungshawn            # change to your twitter username
 
 social:
   name: shawn                  # it will shows as the copyright owner in Footer
@@ -27,7 +27,7 @@ social:
   links:
     # The first element serves as the copyright owner's link
     - https://twitter.com/yeungshawn      # change to your twitter homepage
-    - https://github.com/shawnyeung       # change to your github homepage
+    - https://weibo.com/u/1725058437       # change to your github homepage
     # Uncomment below to add more social links
     # - https://www.facebook.com/username
     # - https://www.linkedin.com/in/username
