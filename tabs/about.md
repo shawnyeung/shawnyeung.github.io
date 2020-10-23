@@ -8,4 +8,10 @@ title: About
 # MIT License
 ---
 
-> **Note**: Add Markdown syntax content to file `tabs/about.md` and it will show up on this page.
+　　　　<br/>
+
+　　前互联网从业者，现全职future daytrader。
+
+　　在这里，记录、回望与憧憬，愿早日走上心中的自由之路，让家人幸福喜乐，让自己无我洒脱。三餐四季，温暖有趣。
+
+　　
