@@ -26,4 +26,4 @@ title: 关于
 
 　　　　<br/>
 
-![麦田群鸦](https://zero2hero.fun/assets/img/blogs/20201025043728.jpg)
+![](https://blogarchive.oss-cn-beijing.aliyuncs.com/20201027205710.jpg)
