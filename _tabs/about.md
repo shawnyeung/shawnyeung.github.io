@@ -1,5 +1,7 @@
 ---
-title: 关于
+title: About
+icon: fas fa-info
+order: 4
 
 # The About page
 # v2.0
@@ -7,8 +9,6 @@ title: 关于
 # © 2017-2019 Cotes Chung
 # MIT License
 ---
-
-　　　　
 
 `One has to take a somewhat bold and dangerous line with this existence: especially as, whatever happens, we are bound to lose it.  —— Nietzsche `
 
