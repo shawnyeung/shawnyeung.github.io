@@ -26,6 +26,3 @@ order: 4
 
 没有宏大的理想，惟愿三餐四季，温暖有趣。
 
-　　　　<br/>
-
-![](https://blogarchive.oss-cn-beijing.aliyuncs.com/20201027205710.jpg)
