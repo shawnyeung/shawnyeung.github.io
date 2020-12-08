@@ -12,18 +12,23 @@
 @import "_colors/light-typography";
 @import "_colors/dark-typography";
 
+@mixin set-visible($light-display, $dark-display) {
+  [light-mode-invisible] {
+    display: $light-display;
+  }
+
+  [dark-mode-invisible] {
+    display: $dark-display;
+  }
+}
 
 @mixin mode-toggle($dark-mode: false) {
   @if $dark-mode {
+    @include set-visible(inline-block, none);
     @include dark-scheme;
-    .mode-toggle {
-      transform: rotateY(180deg);
-    }
   } @else {
+    @include set-visible(none, inline-block);
     @include light-scheme;
-    .mode-toggle {
-      transform: none;
-    }
   }
 }
 
@@ -186,7 +191,7 @@ $sidebar-display: "sidebar-display";
     #mode-toggle-wrapper {
       i {
         @include sidebar-links;
-        margin: 0;
+        margin-right: 0;
         font-size: 1.05rem;
         text-align: center;
         position: relative;
