@@ -23,6 +23,8 @@ tags: []
 
 6. [2020-12-09](https://zero2hero.fun/posts/20201210Thu/#1-%E5%85%B8%E5%9E%8B%E7%9A%84spike--channel)
 
+7. [2021-07-13](https://zero2hero.fun/posts/20210713Tue/#2-%E5%85%B8%E5%9E%8B%E7%9A%84sct%E6%97%A5)
+
    
 
 <br/>
