@@ -3,7 +3,10 @@
 source "https://rubygems.org"
 
 gem "jekyll-theme-chirpy", "~> 7.0.1", ">= 7.0.1"
+git_source(:github) { |shawnyeung.github.io| "https://github.com/#{shawnyeung.github.io}" }
 
+# gem "rails"
+gem "github-pages", "~> 215", group: :jekyll_plugins
 group :test do
   gem "html-proofer", "~> 4.4"
 end
