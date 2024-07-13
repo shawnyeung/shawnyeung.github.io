@@ -15,9 +15,10 @@ bundle update jekyll-theme-chirpy
 
 ---
 
-## Night主题修改（night.css）
+## Night主题修改
 
-1. 引用段落的竖线颜色（文件night.css）：
+1. 设置-外观-外观文件夹-night.css
+1. 引用段落的竖线颜色：
 
 ```text
 blockquote {
@@ -26,7 +27,7 @@ blockquote {
     border-left: solid 2px #BEBEBE;
 ```
 
-2. Inline code 的背景色引用段落的竖线颜色（文件night.css）：
+2. Inline code 的背景色引用段落的竖线颜色：
 
 ```text
 pre,
@@ -43,7 +44,7 @@ var {
 code,
 tt,
 var {
-    background: #CD8500
+    background: #696969
 ;
 }
 
