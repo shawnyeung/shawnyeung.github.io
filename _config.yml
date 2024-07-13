@@ -182,7 +182,7 @@ exclude:
   - LICENSE
   - rollup.config.js
   - package*.json
-    - /assets/js/dist/app.min.js
+    - app.min.js
 
 jekyll-archives:
   enabled: [categories, tags]
@@ -197,3 +197,8 @@ plugins:
   - jekyll-sitemap
   
 gems: [jekyll-sitemap]
+
+
+htmlproofer:
+  ignore_files:
+    - /assets/js/dist/app.min.js
