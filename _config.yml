@@ -19,9 +19,9 @@ title: Zero to Hero                          # the main title
 tagline: 行走自由之路   # it will display as the sub-title
 
 description: >-                        # used by seo meta and the atom feed
-  Priceaction practice and daily review. E-mini S&P500 future daytrading. Priceaction实践与每日复盘。主做标普500指数期货
+  Priceaction practice and daily review. E-mini S&P500 future daytrading. Priceaction实践与每日复盘。
 # fill in the protocol & hostname for your site, e.g., 'https://username.github.io'
-url: 'https://shawnyeung.github.io/'
+url: 'https://yangxg.me/'
 
 
 github:
@@ -34,7 +34,7 @@ social:
   # Change to your full name.
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
   name: 大眼儿蹦吧啦
-  email: knowall.88888@gmail.com # change to your email address
+  email: contanct@yangxg.me # change to your email address
   links:
     # The first element serves as the copyright owner's link
     - https://twitter.com/MiaPapa888 # change to your twitter homepage
@@ -108,7 +108,7 @@ assets:
 pwa:
   enabled: true # the option for PWA feature
 
-paginate: 10
+paginate: 50
 
 # The base URL of your site
 baseurl: ""
