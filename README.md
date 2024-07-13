@@ -15,6 +15,12 @@ bundle update jekyll-theme-chirpy
 
 ---
 
+## 更改左侧导航
+
+`/_data/locales/zh-CN.yml` 
+
+---
+
 ## Night主题修改
 
 1. 设置-外观-外观文件夹-night.css
