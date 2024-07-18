@@ -14,9 +14,9 @@ timezone:
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Zero to Hero                          # the main title
+title: Present                          # the main title
 
-tagline: 行走自由之路   # it will display as the sub-title
+tagline: Today's is a gift. That is why it is called Present.# it will display as the sub-title
 
 description: >-                        # used by seo meta and the atom feed
   Priceaction practice and daily review. E-mini S&P500 future daytrading. Priceaction实践与每日复盘。
