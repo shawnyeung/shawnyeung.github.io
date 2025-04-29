@@ -232,6 +232,54 @@
         border-radius: 5px;
     }
 }
+/* 移动端优化 */
+@media (max-width: 768px) {
+    table td:nth-child(4), table th:nth-child(4) {
+        display: none;
+    }
+    table tr:not(.section-header):not(:first-child) {
+        display: block;
+        margin-bottom: 15px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 10px;
+    }
+    table td {
+        display: block;
+        padding: 5px 0;
+    }
+    table td:first-child {
+        font-weight: bold;
+    }
+    .header {
+        margin-bottom: 90px;
+    }
+    .navbar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .navbar a {
+        padding: 12px 16px;
+        font-size: 1rem;
+    }
+    .phone-link {
+        font-size: 1.3em;
+        padding: 15px 0;
+    }
+}
+
+/* 高清屏优化 */
+@media (-webkit-min-device-pixel-ratio: 2),
+       (min-resolution: 192dpi) {
+    html {
+        font-size: 16px;
+    }
+    .header::before,
+    .header::after {
+        background-image: url('icon@2x.png');
+    }
+}
     </style>
 </head>
 <body>
