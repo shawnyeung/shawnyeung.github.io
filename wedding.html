@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>婚礼流程</title>
+    <style>
+        :root {
+            --primary-color: #d63384;
+            --secondary-color: #f8f9fa;
+            --accent-color: #ffc107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(to right, #fff0f5, #e6e6ff);
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 页面标题 */
+        .header {
+            text-align: center;
+            position: relative;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        .header::before,
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        /* 固定导航栏 */
+        .navbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: white;
+            padding: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar a {
+            text-decoration: none;
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+            min-width: 120px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .section-header {
+            background-color: var(--primary-color)!important;
+            color: white!important;
+            text-align: center!important;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .time-column {
+            white-space: nowrap;
+            width: 12%;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .header::before,
+            .header::after {
+                width: 50px;
+                height: 50px;
+                top: 40%;
+            }
+
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.9rem;
+            }
+
+            .time-column {
+                width: 20%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header::before,
+            .header::after {
+                display: none;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* 新增固定定位样式 */
+        .sticky-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            transform: translateY(-100%);
+            animation: slideDown 0.3s forwards;
+        }
+
+        @keyframes slideDown {
+            from {transform: translateY(-100%);}
+            to {transform: translateY(0);}
+        }
+
+        .content-offset {
+            margin-top: 80px; /* 根据导航栏实际高度调整 */
+        }
+
+        /* 底部联系人样式 */
+        #contacts {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+            margin: 40px 0 0 0;
+        }
+
+        .contacts-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .contacts-table th,
+        .contacts-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .contacts-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .contacts-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        /* 电话链接样式 */
+.phone-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    padding: 8px 0;
+}
+
+/* 移动端优化点击区域 */
+@media (max-width: 768px) {
+    .phone-link {
+        font-size: 1.2em;
+        padding: 12px 0;
+    }
+    
+    /* 增加轻微背景色区分可点击元素 */
+    .phone-link:hover {
+        background-color: rgba(214, 51, 132, 0.05);
+        border-radius: 5px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="header" id="top">
+            <h1>婚礼流程</h1>
+            <p class="subtitle">杨宏业 & 张晰然 | 2025年5月3日</p>
+        </div>
+
+        <!-- 动态导航栏 -->
+        <nav class="navbar" id="dynamicNav"></nav>
+
+        <!-- 婚礼流程表格 -->
+        <table id="weddingTable">
+            <tr class="section-header" data-nav="接亲流程部分—新郎准备">
+                <th colspan="4">新郎准备</th>
+            </tr>
+            <tr>
+                <th class="time-column">时间</th><th>项目</th><th>内容</th><th>物品</th>
+            </tr>
+            <tr><td>4：50</td><td>起床洗漱</td><td>新郎起床，洗漱，换衣服；影像到达开始记录新郎、伴郎准备的场景，伴郎帮新郎整理，父母对儿子的嘱托、送儿子出门，新郎与伴郎互动</td><td>准备些水果、干果、喜糖摆盘；家里整体装饰喜庆为主；贴喜字，准备早餐。</td></tr>
+            <tr><td>5：00</td><td>伴郎准备</td><td>伴郎团 5:30之前到（如果现场造型则需要 5:00到）</td><td>伴郎团 5:30之前到（如果现场造型则需要 5:00到）</td></tr>
+            <tr><td>6：00</td><td>出发迎娶</td><td>新郎和伴郎出发，准备迎娶，新郎父母在新房等候</td><td>新郎和伴郎出发，准备迎娶，新郎父母在新房等候</td></tr>
+            <tr><td>6：15</td><td>到达新娘家</td><td>到达新娘家</td><td>到达新娘家</td></tr>
+            <tr><td>6：55</td><td>到娘家，准备迎娶</td><td>在楼下拍摄，主伴郎联系娘家主管，等候迎娶</td><td>在楼下拍摄，主伴郎联系娘家主管，等候迎娶</td></tr>
+
+            <tr class="section-header" data-nav="接亲流程部分—新娘准备">
+                <th colspan="4">新娘准备</th>
+            </tr>
+            <tr>
+                <th class="time-column">时间</th><th>项目</th><th>内容</th><th>物品</th>
+            </tr>
+            <tr><td>2：25</td><td>起床准备</td><td>新娘起床洗漱、做简单的皮肤护理，穿开襟的衣服准备化妆</td><td>新娘开襟衣服化妆；房间准备喜糖、干果、水果摆盘，准备早餐</td></tr>
+            <tr><td>2：35</td><td>化妆师到达</td><td>化妆师到达，与新娘沟通准备</td><td>化妆师到达，与新娘沟通准备</td></tr>
+            <tr><td>2：40</td><td>晨袍造型</td><td>新娘开始第一套晨袍造型</td><td>新娘开始第一套晨袍造型</td></tr>
+            <tr><td>4：00</td><td>人员到达</td><td>摄影摄像到达，新娘化妆造型进行中</td><td>摄影摄像到达，新娘化妆造型进行中</td></tr>
+            <tr><td>4：30</td><td>晨袍拍摄</td><td>新娘晨袍妆造完成，开始拍摄晨袍环节，4:30之前父母到达</td><td>新娘晨袍妆造完成，开始拍摄晨袍环节，4:30之前父母到达</td></tr>
+            <tr><td>5：30</td><td>伴娘准备</td><td>伴娘团到达新娘家（如果需现场化妆需4:30到）</td><td>伴娘团到达新娘家（如果需现场化妆需4:30到）</td></tr>
+            <tr><td>5：30</td><td>中式造型</td><td>新娘更换中式造型</td><td>新娘更换中式造型</td></tr>
+            <tr><td>6：00</td><td>秀禾照拍摄</td><td>中式新娘妆完成、女儿与长辈互动（嘱托、祝福、感谢）；与新娘互动（合影）</td><td>中式新娘妆完成、女儿与长辈互动（嘱托、祝福、感谢）；与新娘互动（合影）</td></tr>
+            <tr><td>6：55</td><td>接亲准备就绪</td><td>娘家准备完毕 主伴娘联系主伴郎准备堵门</td><td>娘家准备完毕 主伴娘联系主伴郎准备堵门</td></tr>
+
+            <tr class="section-header" data-nav="接亲流程部分—娘家">
+                <th colspan="4">娘家</th>
+            </tr>
+            <tr>
+                <th class="time-column">时间</th><th>项目</th><th>内容</th><th>物品</th>
+            </tr>
+            <tr><td>7：00</td><td>新郎进门</td><td>在家人引导下进入新娘家；（亲戚开始煮饺子）长辈在客厅坐好，等待新郎改口，岳父母给红包</td><td>改口红包、泡好茶、饺子</td></tr>
+            <tr><td>1小时</td><td>新郎叫门</td><td>伴娘团紧把闺房门，新郎伴郎拿出红包请求开门</td><td>各种小道具、红包</td></tr>
+            <tr><td>1小时</td><td>新郎叫门</td><td>新郎伴郎开始做考验小游戏</td><td>红包，小道具</td></tr>
+            <tr><td>1小时</td><td>新郎叫门</td><td>待嫁新娘不穿鞋坐在床上，新郎上前说迎娶的话.</td><td>新郎手持捧花</td></tr>
+            <tr><td>1小时</td><td>感谢长辈</td><td>来到客厅，新郎给岳父岳母敬茶，给岳父母戴胸花，感谢长辈并改口</td><td>长辈的胸花、红色茶碗、茶、改口大红包</td></tr>
+            <tr><td>1小时</td><td>合影</td><td>新人与长辈亲属、伴郎伴娘合影、吃饺子（吃双数）</td><td>红碗、红筷子、饺子（双数）</td></tr>
+            <tr><td>8：00</td><td>从娘家出发去新房</td><td>新人下楼，从娘家出发去新房（娘家两名女眷拿红盆）</td><td>新人下楼，从娘家出发去新房（娘家两名女眷拿红盆）</td></tr>
+
+            <tr class="section-header" data-nav="接亲流程部分—新房">
+                <th colspan="4">新房</th>
+            </tr>
+            <tr>
+                <th class="time-column">时间</th><th>项目</th><th>内容</th><th>物品</th>
+            </tr>
+            <tr><td>8：20</td><td>到新房</td><td>新人及新娘父母到达新房</td><td>在新房小区门口放鞭，亲属或朋友在新房门口手持手扭炮（提前安排好落实到人头）</td></tr>
+            <tr><td>30分钟</td><td>接盆</td><td>新郎新娘双方各出两名辈分或年龄相仿的女眷，新娘家女眷抱红盆递交给新郎方女眷</td><td>红盆（生活用品+米面粮食）、递盆女眷红包、单元门口接送盆</td></tr>
+            <tr><td>30分钟</td><td>进入新房</td><td>新郎父母在客厅等候，新娘进门改口，给公婆敬茶，给父母戴花，公婆准备红包给儿媳</td><td>父母的胸花、红色茶碗、茶、改口大红包</td></tr>
+            <tr><td>30分钟</td><td>钉门帘</td><td>新娘兄弟订门帘</td><td>红色门帘、秤砣（用红布包起来）钉门帘红包</td></tr>
+            <tr><td>30分钟</td><td>坐福/抱小孩</td><td>新娘坐福，抱小孩</td><td>福垫、小孩红包</td></tr>
+            <tr><td>30分钟</td><td>撒帐</td><td>长辈将大枣、花生、桂圆、莲子撒到福垫上，称"早上贵子"</td><td>大枣、花生、桂圆、莲子</td></tr>
+            <tr><td>8：50</td><td>新房出发去酒店</td><td>新房出发去酒店</td><td>新房出发去酒店</td></tr>
+            <tr><td>9：30</td><td>到达酒店</td><td>到达酒店</td><td>到达酒店</td></tr>
+            <tr><td>30分钟</td><td>新人换装</td><td>新人换服装+补妆</td><td>新人换服装+补妆</td></tr>
+            <tr><td>10：00</td><td>人景空镜拍摄</td><td>人景空镜拍摄</td><td>人景空镜拍摄</td></tr>
+            <tr><td>11：08</td><td>仪式准备</td><td>父母入席</td><td>新人做准备</td></tr>
+            <tr><td>11：18</td><td>仪式开始</td><td>仪式开始</td><td>仪式开始</td></tr>
+
+            <tr class="section-header" data-nav="酒店准备">
+                <th colspan="4">酒店准备</th>
+            </tr>
+            <tr>
+                <th class="time-column">时间</th><th>项目</th><th>内容</th><th>物品</th>
+            </tr>
+            <tr><td>9：00</td><td>物品准备</td><td>酒店大总管和物品总管到酒店，准备好烟酒及摆盘的干果，配合酒店人员摆盘</td><td>酒店大总管、物品总管</td></tr>
+            <tr><td>9：30</td><td>人员准备</td><td>签到台人员以及迎宾人员到位，熟悉现场座位，以及来宾的座位，照看好签到台</td><td>签到迎宾人员</td></tr>
+            <tr><td>10：30</td><td>人员准备</td><td>客人陆续到达酒店，开始签到</td><td>签到迎宾人员</td></tr>
+            <tr><td>11：18</td><td>仪式开始</td><td>婚礼仪式开始</td><td>婚礼仪式开始</td></tr>
+        </table>
+    <!-- 联系人员部分（移至底部） -->
+        <!-- 联系人员部分（移至底部） -->
+<section id="contacts">
+    <h2 style="text-align:center;margin-bottom:20px;color:#d63384;">联系人员</h2>
+    <table class="contacts-table">
+        <thead>
+            <tr>
+                <th>姓名</th>
+                <th>职务</th>
+                <th>手机</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 新郎新娘联系方式 -->
+            <tr>
+                <td>杨宏业</td>
+                <td>新郎</td>
+                <td><a href="tel:+8618698630477" class="phone-link">186-9863-0477</a></td>
+            </tr>
+            <tr>
+                <td>张晰然</td>
+                <td>新娘</td>
+                <td><a href="tel:+8618643670077" class="phone-link">186-4367-0077</a></td>
+            </tr>
+            
+            <!-- 总管联系方式 -->
+            <tr>
+                <td>杨小光</td>
+                <td>总管</td>
+                <td><a href="tel:+8618601120084" class="phone-link">186-0112-0084</a></td>
+            </tr>
+            <tr>
+                <td>AA</td>
+                <td>娘家总管</td>
+                <td><a href="tel:+8613700004444" class="phone-link">137-0000-4444</a></td>
+            </tr>
+            <tr>
+                <td>BB</td>
+                <td>婆家总管</td>
+                <td><a href="tel:+8613700005555" class="phone-link">137-0000-5555</a></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+    </div>
+
+    <script>
+        // 动态生成导航栏及固定功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section-header');
+            const navBar = document.getElementById('dynamicNav');
+            
+            // 添加内容偏移
+            document.body.style.paddingTop = '80px'; // 防止内容被固定导航栏遮挡
+            
+            // 创建导航项容器
+            const navLinks = [];
+
+            // 添加表格标题导航项
+            sections.forEach((section, index) => {
+                const sectionTitle = section.querySelector('th').textContent.trim();
+                const anchorId = 'section-' + index;
+                section.id = anchorId;
+                
+                const navLink = document.createElement('a');
+                navLink.href = '#' + anchorId;
+                navLink.textContent = sectionTitle.split('—')[1] || sectionTitle;
+                navLinks.push(navLink);
+            });
+
+            // 最后添加联系人员导航项
+            const contactLink = document.createElement('a');
+            contactLink.href = '#contacts';
+            contactLink.textContent = '联系人员';
+            navLinks.push(contactLink);
+
+            // 批量添加导航项
+            navLinks.forEach(link => navBar.appendChild(link));
+
+            // 监听滚动事件实现固定导航
+            let navbarHeight = navBar.offsetHeight;
+            let navbarTop = navBar.getBoundingClientRect().top + window.pageYOffset;
+
+            function handleScroll() {
+                if (window.pageYOffset > navbarTop - 20) { // 提前20px触发
+                    navBar.classList.add('sticky-navbar');
+                } else {
+                    navBar.classList.remove('sticky-navbar');
+                }
+
+                // 导航高亮逻辑
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop - navbarHeight - 20;
+                    if (pageYOffset >= sectionTop) {
+                        current = section.id;
+                    }
+                });
+
+                // 检查是否到达联系人部分
+                const contactsSection = document.getElementById('contacts');
+                if (contactsSection && window.pageYOffset >= contactsSection.offsetTop - navbarHeight - 20) {
+                    current = 'contacts';
+                }
+
+                document.querySelectorAll('.navbar a').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            // 初始化并绑定事件
+            handleScroll();
+            window.addEventListener('scroll', handleScroll);
+            window.addEventListener('resize', () => {
+                navbarHeight = navBar.offsetHeight;
+                navbarTop = navBar.getBoundingClientRect().top + window.pageYOffset;
+            });
+        });
+    </script>
+</body>
+</html>
