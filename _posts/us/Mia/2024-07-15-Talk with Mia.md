@@ -1,7 +1,7 @@
 ---
 title: Talk with Mia
 description: Mia 有了自己第一款 App 的愿景
-date: 2024-07-15
+date: 2024-07-16
 categories: [y2024,Jul]
 tags: [Mia]
 image: https://cdn.jsdelivr.net/gh/shawnyeung/shawnyeung.github.io@main/assets/img/202407220115712.jpg
