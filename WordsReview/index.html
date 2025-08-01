@@ -3,50 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配对挑战 - 带错题统计</title>
+    <title>单词配对练习</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        danger: '#EF4444',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
     <style type="text/tailwindcss">
         @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
             .btn-selected {
-                @apply bg-emerald-500 transform scale-105;
-            }
-            .btn-disabled {
-                @apply bg-gray-500 opacity-10 cursor-not-allowed;
-            }
-            .strikethrough {
-                text-decoration: line-through;
+                @apply bg-primary scale-105;
             }
             .btn-error {
-                @apply bg-rose-500;
+                @apply bg-danger;
             }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 to-slate-800 min-h-screen flex flex-col items-center justify-center p-4 text-white">
-    <!-- 主容器 -->
-    <div class="max-w-4xl w-full mx-auto flex flex-col items-center">
-        <!-- 文件选择界面 -->
-        <div id="file-upload-section" class="text-center p-8 w-full">
-            <h1 class="text-3xl font-bold mb-8 text-cyan-300">
-                <i class="fa fa-puzzle-piece mr-2"></i>配对挑战
-            </h1>
-            <p class="text-gray-300 mb-6 text-lg">请选择一个CSV格式文件开始游戏（每行包含两列，用逗号分隔）</p>
-            
-            <label for="file-upload" class="cursor-pointer inline-block">
-                <div class="bg-slate-700 hover:bg-emerald-600 transition-all duration-300 py-6 px-10 rounded-lg shadow-lg inline-flex items-center justify-center">
-                    <i class="fa fa-file-text-o mr-3 text-xl"></i>
-                    <span class="text-lg font-medium">选择CSV文件</span>
-                </div>
-                <input id="file-upload" type="file" accept="text/csv" class="hidden">
-            </label>
-            
-            <div id="file-upload-status" class="mt-6 hidden"></div>
-            <div id="file-upload-error" class="mt-6 text-red-400 hidden"></div>
-        </div>
-
-        <!-- 游戏界面（默认隐藏） -->
-        <div id="game-section" class="hidden w-full">
+<body class="bg-slate-900 text-white min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- 游戏界面 -->
+        <div id="game-section" class="w-full">
             <h1 class="text-3xl font-bold mb-8 text-center text-cyan-300">
                 <i class="fa fa-puzzle-piece mr-2"></i>配对挑战
             </h1>
@@ -85,7 +81,7 @@
                     <i class="fa fa-refresh mr-2"></i>重新开始
                 </button>
                 <button id="review-errors-button" class="bg-amber-600 hover:bg-amber-500 transition-all duration-300 py-3 px-8 rounded-lg text-white font-medium hidden">
-                    <i class="fa fa-repeat mr-2"></i>复习错题
+                    <i class="fa fa-exclamation-triangle mr-2"></i>复习错题
                 </button>
             </div>
         </div>
@@ -94,118 +90,50 @@
     <script>
         // 全局变量
         let dataArray = [];           // 所有数据
-        let currentItems = [];        // 当前轮次的题目
-        let usedItems = new Set();    // 已经使用过的项目ID
-        let currentRoundWrongItems = new Set(); // 本轮出现的错题
-        let allTimeWrongItems = new Map(); // 所有时间的错题及错误次数 (id => count)
-        let allItemsProcessed = false;// 所有项目是否已处理完毕
-        let inReviewMode = false;     // 是否处于错题复习模式
-        let clickHistory = [];        // 记录点击历史
-        let matchedPairs = 0;         // 当前轮次已匹配的对数
         let totalItemsCount = 0;      // 总项目数量
-        const ITEMS_PER_ROUND = 4;    // 每页显示4对题目
+        let usedItems = new Set();    // 已使用的项目ID
+        let currentItems = [];        // 当前轮次的项目
+        let matchedPairs = 0;         // 当前轮次已匹配的对数
+        let clickHistory = [];        // 记录点击历史
+        let currentRoundWrongItems = new Set(); // 当前轮次的错题
+        let allTimeWrongItems = new Map(); // 所有时间的错题及其错误次数
+        let inReviewMode = false;     // 是否处于错题复习模式
 
-        // 事件监听
-        document.getElementById('file-upload').addEventListener('change', handleFileUpload);
-        document.getElementById('restart-button').addEventListener('click', restartGame);
-        document.getElementById('review-errors-button').addEventListener('click', reviewErrors);
-
-        // 重新开始游戏
-        function restartGame() {
-            // 重置所有游戏状态
-            dataArray = [];
-            currentItems = [];
-            usedItems = new Set();
-            currentRoundWrongItems = new Set();
-            allTimeWrongItems = new Map();
-            allItemsProcessed = false;
-            inReviewMode = false;
-            clickHistory = [];
-            matchedPairs = 0;
-            totalItemsCount = 0;
-
-            // 隐藏总结界面，显示文件选择界面
-            document.getElementById('error-summary-section').classList.add('hidden');
-            document.getElementById('file-upload-section').classList.remove('hidden');
-            document.getElementById('file-upload').value = ''; // 重置文件选择
-        }
-
-        // 复习错题
-        function reviewErrors() {
-            // 重置当前轮次状态，但保留所有错题记录
-            currentRoundWrongItems = new Set();
-            currentItems = [];
-            matchedPairs = 0;
-            inReviewMode = true; // 强制进入错题复习模式
+        // 页面加载完成后自动加载CSV数据
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示加载状态
+            updateStatus('正在加载数据...');
             
-            // 隐藏总结界面，显示游戏界面
-            document.getElementById('error-summary-section').classList.add('hidden');
-            document.getElementById('game-section').classList.remove('hidden');
+            // 加载指定的CSV文件
+            loadDefaultCsv();
             
-            // 开始新一轮（错题复习）
-            startNewRound();
-        }
+            // 绑定重新开始按钮事件
+            document.getElementById('restart-button').addEventListener('click', restartGame);
+            document.getElementById('review-errors-button').addEventListener('click', reviewErrors);
+        });
 
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // 验证文件类型
-            if (!file.name.endsWith('.csv')) {
-                showFileError('请选择CSV格式的文件');
-                return;
-            }
-
-            // 读取文件
-            const reader = new FileReader();
-            showFileStatus('正在读取文件...');
-
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    parseCsvData(content);
-                    showFileStatus('文件读取成功，正在准备游戏...');
-                    
-                    // 隐藏文件上传界面，显示游戏界面
-                    setTimeout(() => {
-                        document.getElementById('file-upload-section').classList.add('hidden');
-                        document.getElementById('game-section').classList.remove('hidden');
+        // 从指定URL加载CSV数据
+        function loadDefaultCsv() {
+            // 使用raw.githubusercontent.com获取原始文件内容
+            fetch('https://raw.githubusercontent.com/shawnyeung/shawnyeung.github.io/main/WordsReview/1.csv')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(content => {
+                    try {
+                        parseCsvData(content);
+                        // 数据加载成功后开始游戏
                         startNewRound();
-                    }, 1000);
-                } catch (error) {
-                    showFileError(`文件解析错误: ${error.message}`);
-                }
-            };
-
-            reader.onerror = function() {
-                showFileError('文件读取失败，请重试');
-            };
-
-            reader.readAsText(file);
-        }
-
-        // 显示文件上传状态
-        function showFileStatus(message) {
-            const statusEl = document.getElementById('file-upload-status');
-            const errorEl = document.getElementById('file-upload-error');
-            
-            statusEl.textContent = message;
-            statusEl.classList.remove('hidden', 'text-red-400');
-            statusEl.classList.add('text-emerald-400');
-            errorEl.classList.add('hidden');
-        }
-
-        // 显示文件上传错误
-        function showFileError(message) {
-            const statusEl = document.getElementById('file-upload-status');
-            const errorEl = document.getElementById('file-upload-error');
-            
-            errorEl.textContent = message;
-            errorEl.classList.remove('hidden');
-            statusEl.classList.add('hidden');
-            
-            // 重置文件输入，允许重新选择同一文件
-            document.getElementById('file-upload').value = '';
+                    } catch (error) {
+                        showError(`文件解析错误: ${error.message}`);
+                    }
+                })
+                .catch(error => {
+                    showError(`加载数据失败: ${error.message}`);
+                });
         }
 
         // 解析CSV数据
@@ -219,20 +147,27 @@
 
             lines.forEach((line, index) => {
                 const parts = line.trim().split(',').map(part => part.trim());
-                if (parts.length < 2) {
-                    throw new Error(`第${index + 1}行格式错误，需要至少两列数据`);
+                // 支持5列数据：left, right, appearances, errors, errorRate
+                if (parts.length < 5) {
+                    throw new Error(`第${index + 1}行格式错误，需要至少5列数据`);
                 }
                 
                 const left = parts[0];
-                const right = parts.slice(1).join(','); // 允许右侧内容包含逗号
+                const right = parts.slice(1, parts.length - 3).join(','); // 允许右侧内容包含逗号
+                const appearances = parseInt(parts[parts.length - 3]) || 0;
+                const errors = parseInt(parts[parts.length - 2]) || 0;
+                const errorRate = parseFloat(parts[parts.length - 1]) || 0;
                 
                 dataArray.push({
                     id: generateId(left, right),
                     left,
-                    right
+                    right,
+                    appearances,    // 出现次数
+                    errors,         // 错误次数
+                    errorRate       // 错误率
                 });
             });
-
+            
             if (dataArray.length === 0) {
                 throw new Error('未找到有效的数据，请检查文件格式');
             }
@@ -240,42 +175,23 @@
             totalItemsCount = dataArray.length;
         }
 
-        // 生成唯一ID用于跟踪项目
+        // 生成唯一ID
         function generateId(left, right) {
-            return `${left}|${right}`;
+            return `${left}-${right}`.replace(/\s+/g, '-').toLowerCase();
         }
 
-        // 显示错误信息
-        function showError(message) {
-            const errorEl = document.getElementById('error');
-            errorEl.textContent = message;
-            errorEl.classList.remove('hidden');
-            setTimeout(() => {
-                errorEl.classList.add('hidden');
-            }, 3000);
-        }
-
-        // 开始新一轮游戏
+        // 开始新的一轮
         function startNewRound() {
-            const leftColumn = document.getElementById('left-column');
-            const rightColumn = document.getElementById('right-column');
-            
-            // 重置当前轮次状态，但保留上一轮的错题
+            // 清空当前轮次的错题
             const previousWrongItems = new Set(currentRoundWrongItems);
             currentRoundWrongItems.clear();
             
-            leftColumn.innerHTML = '';
-            rightColumn.innerHTML = '';
-            clickHistory = [];
+            // 清空界面
+            document.getElementById('left-column').innerHTML = '';
+            document.getElementById('right-column').innerHTML = '';
             matchedPairs = 0;
-            currentItems = [];
-
-            // 检查是否所有题目都已处理完毕且没有错题
-            if (usedItems.size >= totalItemsCount && !inReviewMode && previousWrongItems.size === 0) {
-                showErrorSummary();
-                return;
-            }
-
+            clickHistory = [];
+            
             // 检查是否需要进入错题复习模式
             if (usedItems.size >= totalItemsCount && !inReviewMode) {
                 inReviewMode = true;
@@ -295,7 +211,7 @@
             // 生成左侧按钮
             currentItems.forEach(item => {
                 const button = createButton(item.left, 'left', item.right, item.id);
-                leftColumn.appendChild(button);
+                document.getElementById('left-column').appendChild(button);
             });
 
             // 生成右侧按钮（确保不会与左侧同位置按钮匹配，除非只有一道题）
@@ -310,7 +226,7 @@
             
             rightItems.forEach(item => {
                 const button = createButton(item.right, 'right', item.right, item.id);
-                rightColumn.appendChild(button);
+                document.getElementById('right-column').appendChild(button);
             });
 
             // 更新进度显示
@@ -320,7 +236,174 @@
                 : `当前轮次: ${matchedPairs} / ${currentItems.length} 对`);
         }
 
-        // 显示错题总结
+        // 获取当前轮次的项目
+        function getCurrentRoundItems(previousWrongItems) {
+            currentItems = [];
+            
+            // 首先添加上一轮的所有错题
+            const wrongItemsArray = Array.from(previousWrongItems).map(id => {
+                const item = dataArray.find(item => item.id === id);
+                if (item) {
+                    // 更新出现次数
+                    item.appearances++;
+                }
+                return item;
+            }).filter(Boolean); // 过滤掉可能的undefined
+            
+            currentItems.push(...wrongItemsArray);
+            
+            // 计算还需要多少个新项目
+            const roundSize = Math.max(4, wrongItemsArray.length * 2); // 每轮至少4个项目，错题多的话翻倍
+            const remainingSlots = roundSize - wrongItemsArray.length;
+            
+            if (remainingSlots > 0) {
+                const availableItems = dataArray.filter(item =>
+                    !usedItems.has(item.id) && !currentItems.some(i => i.id === item.id)
+                );
+                
+                const itemsToAdd = Math.min(remainingSlots, availableItems.length);
+                for (let i = 0; i < itemsToAdd; i++) {
+                    const randomIndex = Math.floor(Math.random() * availableItems.length);
+                    const randomItem = availableItems.splice(randomIndex, 1)[0];
+                    
+                    // 更新出现次数
+                    randomItem.appearances++;
+                    currentItems.push(randomItem);
+                    usedItems.add(randomItem.id);
+                }
+            }
+        }
+
+        // 生成不会与左侧同位置匹配的右侧项目
+        function generateNonMatchingRightItems(items) {
+            let shuffled = [...items];
+            
+            // 简单洗牌
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            
+            // 检查是否有位置匹配，如果有则再次洗牌
+            for (let i = 0; i < items.length; i++) {
+                if (shuffled[i].id === items[i].id) {
+                    return generateNonMatchingRightItems(items);
+                }
+            }
+            
+            return shuffled;
+        }
+
+        // 创建按钮
+        function createButton(text, column, originalText, id) {
+            const button = document.createElement('button');
+            button.className = `bg-slate-700 hover:bg-slate-600 transition-all duration-300 py-4 px-4 rounded-lg text-left shadow flex-1 ${column === 'left' ? 'text-cyan-300' : 'text-emerald-300'}`;
+            button.textContent = text;
+            button.dataset.original = originalText;
+            button.dataset.id = id;
+            button.dataset.column = column;
+            button.addEventListener('click', handleClick);
+            return button;
+        }
+
+        // 处理按钮点击
+        function handleClick(e) {
+            const button = e.currentTarget;
+            
+            // 如果已经选中，取消选中
+            if (button.classList.contains('btn-selected')) {
+                button.classList.remove('btn-selected');
+                clickHistory = clickHistory.filter(item => item.id !== button.dataset.id);
+                return;
+            }
+            
+            // 每列最多选中一个
+            const column = button.dataset.column;
+            const columnButtons = document.querySelectorAll(`button[data-column="${column}"]`);
+            columnButtons.forEach(btn => btn.classList.remove('btn-selected'));
+            
+            // 选中当前按钮
+            button.classList.add('btn-selected');
+            clickHistory.push({
+                id: button.dataset.id,
+                original: button.dataset.original,
+                column: column,
+                element: button
+            });
+            
+            // 检查是否选中了两个不同列的按钮
+            if (clickHistory.length === 2) {
+                const [first, second] = clickHistory;
+                const isDifferentColumns = first.column !== second.column;
+                
+                if (isDifferentColumns) {
+                    const isMatch = first.id === second.id;
+                    
+                    if (isMatch) {
+                        // 匹配成功
+                        first.element.classList.add('bg-emerald-600');
+                        second.element.classList.add('bg-emerald-600');
+                        
+                        // 移除点击事件
+                        first.element.removeEventListener('click', handleClick);
+                        second.element.removeEventListener('click', handleClick);
+                        
+                        matchedPairs++;
+                        updateStatus(inReviewMode
+                            ? `错题复习: ${matchedPairs} / ${currentItems.length} 对`
+                            : `当前轮次: ${matchedPairs} / ${currentItems.length} 对`);
+                        clickHistory = [];
+
+                        // 当前轮次完成，准备下一轮
+                        if (matchedPairs === currentItems.length) {
+                            const statusMessage = currentRoundWrongItems.size > 0
+                                ? (inReviewMode
+                                    ? `本轮复习完成！下一轮将包含 ${currentRoundWrongItems.size} 道仍出错的题目`
+                                    : `本轮完成！下一轮将包含 ${currentRoundWrongItems.size} 道错题`)
+                                : (inReviewMode
+                                    ? '本轮复习完成！所有错题都已正确匹配！'
+                                    : '本轮完成！准备下一轮新题目...');
+                            
+                            updateStatus(statusMessage);
+                            setTimeout(() => startNewRound(), 1500);
+                        }
+                    } else {
+                        // 匹配失败 - 第一次点击的按钮内容定义为错题
+                        first.element.classList.add('btn-error');
+                        second.element.classList.add('btn-error');
+                        
+                        // 记录错题，更新错误次数和错误率
+                        currentRoundWrongItems.add(first.id);
+                        
+                        // 在数据数组中更新错误统计
+                        const item = dataArray.find(item => item.id === first.id);
+                        if (item) {
+                            item.errors++;
+                            // 确保出现次数至少为1，避免除以零
+                            item.appearances = Math.max(item.appearances, 1);
+                            item.errorRate = (item.errors / item.appearances * 100).toFixed(1);
+                        }
+                        
+                        if (allTimeWrongItems.has(first.id)) {
+                            allTimeWrongItems.set(first.id, allTimeWrongItems.get(first.id) + 1);
+                        } else {
+                            allTimeWrongItems.set(first.id, 1);
+                        }
+                        
+                        setTimeout(() => {
+                            first.element.classList.remove('btn-error', 'btn-selected');
+                            second.element.classList.remove('btn-error', 'btn-selected');
+                            clickHistory = [];
+                        }, 800);
+                    }
+                } else {
+                    // 同一列点击，只保留当前点击的选中状态
+                    first.element.classList.remove('btn-selected');
+                }
+            }
+        }
+
+        // 显示错误总结
         function showErrorSummary() {
             // 隐藏游戏界面，显示总结界面
             document.getElementById('game-section').classList.add('hidden');
@@ -371,113 +454,24 @@
                         const errorItem = document.createElement('div');
                         errorItem.className = 'bg-slate-700 p-4 rounded-lg shadow';
                         errorItem.innerHTML = `
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium"> <span class="text-cyan-300">${item.left}</span></p>
-                                    <p class="mt-1"><span class="text-emerald-300">${item.right}</span></p>
-                                </div>
-                                <div class="bg-rose-600 text-white text-sm px-3 py-1 rounded-full">
-                                    错误 ${count} 次
-                                </div>
+                          <div class="flex justify-between items-start">
+                            <div>
+                              <p class="font-medium"> <span class="text-cyan-300">${item.left}</span></p>
+                              <p class="mt-1"><span class="text-emerald-300">${item.right}</span></p>
+                              <div class="mt-2 text-sm text-gray-300">
+                                <span>出现: ${item.appearances} 次</span> | 
+                                <span>错误: ${item.errors} 次</span> | 
+                                <span>错误率: ${item.errorRate}%</span>
+                              </div>
                             </div>
+                            <div class="bg-rose-600 text-white text-sm px-3 py-1 rounded-full">
+                              错误 ${count} 次
+                            </div>
+                          </div>
                         `;
                         errorsListEl.appendChild(errorItem);
                     }
                 });
-            }
-        }
-
-        // 生成右侧按钮数组，确保不会与左侧同位置按钮匹配
-        function generateNonMatchingRightItems(items) {
-            let shuffled = [...items];
-            
-            // 检查随机排列是否存在同位置匹配
-            function hasSamePositionMatches(arr) {
-                for (let i = 0; i < arr.length; i++) {
-                    if (arr[i].id === items[i].id) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            
-            // 随机法：随机打乱，直到不存在同位置匹配，或尝试次数过多则强制调整
-            let attempts = 0;
-            while (hasSamePositionMatches(shuffled) && attempts < 100) {
-                shuffled = shuffled.sort(() => Math.random() - 0.5);
-                attempts++;
-            }
-            
-            // 如果尝试多次后仍有同位置匹配，则手动调整
-            if (hasSamePositionMatches(shuffled)) {
-                for (let i = 0; i < shuffled.length; i++) {
-                    if (shuffled[i].id === items[i].id) {
-                        // 找到一个不同的位置进行交换
-                        for (let j = 0; j < shuffled.length; j++) {
-                            if (j !== i && shuffled[j].id !== items[i].id && shuffled[i].id !== items[j].id) {
-                                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            return shuffled;
-        }
-
-        // 获取当前轮次要使用的项目（包含上一轮的错题）
-        function getCurrentRoundItems(previousWrongItems) {
-            // 首先添加上一轮的所有错题
-            const wrongItemsArray = Array.from(previousWrongItems).map(id => {
-                return dataArray.find(item => item.id === id);
-            });
-
-            wrongItemsArray.forEach(item => {
-                if (item && !currentItems.some(i => i.id === item.id)) {
-                    currentItems.push(item);
-                }
-            });
-
-            // 如果是复习模式，只使用错题
-            if (inReviewMode) {
-                // 从所有错题中选择，直到满4道
-                const allWrongItems = Array.from(allTimeWrongItems.keys()).map(id => {
-                    return dataArray.find(item => item.id === id);
-                }).filter(Boolean);
-                
-                const remainingSlots = ITEMS_PER_ROUND - currentItems.length;
-                if (remainingSlots > 0) {
-                    const availableItems = allWrongItems.filter(item =>
-                        !currentItems.some(i => i.id === item.id)
-                    );
-                    
-                    const itemsToAdd = Math.min(remainingSlots, availableItems.length);
-                    for (let i = 0; i < itemsToAdd; i++) {
-                        const randomIndex = Math.floor(Math.random() * availableItems.length);
-                        const randomItem = availableItems.splice(randomIndex, 1)[0];
-                        
-                        currentItems.push(randomItem);
-                    }
-                }
-                return;
-            }
-
-            // 补充新题目直到满4道或没有更多新题
-            const remainingSlots = ITEMS_PER_ROUND - currentItems.length;
-            if (remainingSlots > 0) {
-                const availableItems = dataArray.filter(item =>
-                    !usedItems.has(item.id) && !currentItems.some(i => i.id === item.id)
-                );
-                
-                const itemsToAdd = Math.min(remainingSlots, availableItems.length);
-                for (let i = 0; i < itemsToAdd; i++) {
-                    const randomIndex = Math.floor(Math.random() * availableItems.length);
-                    const randomItem = availableItems.splice(randomIndex, 1)[0];
-                    
-                    currentItems.push(randomItem);
-                    usedItems.add(randomItem.id);
-                }
             }
         }
 
@@ -498,114 +492,61 @@
             }
         }
 
-        // 更新状态信息
+        // 更新状态显示
         function updateStatus(message) {
-            const statusEl = document.getElementById('status');
-            statusEl.textContent = message;
-            statusEl.className = inReviewMode
-                ? 'mt-8 text-lg font-medium text-center text-amber-300'
-                : 'mt-8 text-lg font-medium text-center text-cyan-200';
+            document.getElementById('status').textContent = message;
         }
 
-        // 创建按钮通用函数
-        function createButton(text, type, match, itemId) {
-            const button = document.createElement('button');
-            // 基础样式
-            button.className = 'py-4 px-6 rounded-lg bg-slate-700 transition-all duration-300 text-lg font-medium shadow-md hover:shadow-lg w-full hover:bg-emerald-600';
-            button.textContent = text;
-            button.dataset.type = type;
-            button.dataset.match = match;
-            button.dataset.itemId = itemId;
-            button.addEventListener('click', handleClick);
-            return button;
+        // 显示错误信息
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
         }
 
-        // 点击事件处理
-        function handleClick(e) {
-            if (allItemsProcessed) return;
+        // 重新开始游戏
+        function restartGame() {
+            // 重置所有状态
+            usedItems.clear();
+            currentItems = [];
+            matchedPairs = 0;
+            clickHistory = [];
+            currentRoundWrongItems.clear();
+            allTimeWrongItems.clear();
+            inReviewMode = false;
             
-            const currentBtn = e.target;
-            if (currentBtn.classList.contains('btn-disabled')) return;
-
-            // 清除所有按钮的错误状态
-            document.querySelectorAll('.btn-error').forEach(btn => {
-                btn.classList.remove('btn-error');
+            // 重置统计数据
+            dataArray.forEach(item => {
+                item.appearances = 0;
+                item.errors = 0;
+                item.errorRate = 0;
             });
+            
+            // 隐藏总结界面，显示游戏界面
+            document.getElementById('error-summary-section').classList.add('hidden');
+            document.getElementById('game-section').classList.remove('hidden');
+            
+            // 开始新游戏
+            startNewRound();
+        }
 
-            // 记录当前点击
-            clickHistory.push(currentBtn);
-            if (clickHistory.length > 2) clickHistory.shift();
-
-            // 更新选中状态
-            document.querySelectorAll('.btn-selected').forEach(btn => {
-                btn.classList.remove('btn-selected');
-            });
-            currentBtn.classList.add('btn-selected');
-
-            // 处理两次点击的配对逻辑
-            if (clickHistory.length === 2) {
-                const [firstBtn, secondBtn] = clickHistory; // 明确区分第一次和第二次点击
-                const isDifferentColumns = firstBtn.dataset.type !== secondBtn.dataset.type;
-                const isMatch = firstBtn.dataset.match === secondBtn.dataset.match;
-                const firstItemId = firstBtn.dataset.itemId;  // 第一次点击的项目ID
-                
-                if (isDifferentColumns) {
-                    if (isMatch) {
-                        // 匹配成功
-                        firstBtn.classList.add('btn-disabled', 'bg-emerald-600', 'strikethrough');
-                        secondBtn.classList.add('btn-disabled', 'bg-emerald-600', 'strikethrough');
-                        // 移除悬停效果
-                        firstBtn.classList.remove('hover:bg-emerald-600', 'btn-selected');
-                        secondBtn.classList.remove('hover:bg-emerald-600', 'btn-selected');
-                        
-                        firstBtn.removeEventListener('click', handleClick);
-                        secondBtn.removeEventListener('click', handleClick);
-                        
-                        matchedPairs++;
-                        updateStatus(inReviewMode
-                            ? `错题复习: ${matchedPairs} / ${currentItems.length} 对`
-                            : `当前轮次: ${matchedPairs} / ${currentItems.length} 对`);
-                        clickHistory = [];
-
-                        // 当前轮次完成，准备下一轮
-                        if (matchedPairs === currentItems.length) {
-                            const statusMessage = currentRoundWrongItems.size > 0
-                                ? (inReviewMode
-                                    ? `本轮复习完成！下一轮将包含 ${currentRoundWrongItems.size} 道仍出错的题目`
-                                    : `本轮完成！下一轮将包含 ${currentRoundWrongItems.size} 道错题`)
-                                : (inReviewMode
-                                    ? '本轮复习完成！所有错题都已正确匹配！'
-                                    : '本轮完成！准备下一轮新题目...');
-                            
-                            updateStatus(statusMessage);
-                            setTimeout(() => startNewRound(), 1500);
-                        }
-                    } else {
-                        // 匹配失败 - 第一次点击的按钮内容定义为错题
-                        firstBtn.classList.add('btn-error');
-                        secondBtn.classList.add('btn-error');
-                        
-                        // 记录错题，更新错误次数
-                        currentRoundWrongItems.add(firstItemId);
-                        if (allTimeWrongItems.has(firstItemId)) {
-                            allTimeWrongItems.set(firstItemId, allTimeWrongItems.get(firstItemId) + 1);
-                        } else {
-                            allTimeWrongItems.set(firstItemId, 1);
-                        }
-                        
-                        setTimeout(() => {
-                            firstBtn.classList.remove('btn-error', 'btn-selected');
-                            secondBtn.classList.remove('btn-error', 'btn-selected');
-                            clickHistory = [];
-                        }, 800);
-                    }
-                } else {
-                    // 同一列点击，只保留当前点击的选中状态
-                    firstBtn.classList.remove('btn-selected');
-                }
-            }
+        // 复习错题
+        function reviewErrors() {
+            // 重置当前轮次状态，但保留错题记录
+            usedItems.clear();
+            currentItems = [];
+            matchedPairs = 0;
+            clickHistory = [];
+            currentRoundWrongItems.clear();
+            inReviewMode = true;
+            
+            // 隐藏总结界面，显示游戏界面
+            document.getElementById('error-summary-section').classList.add('hidden');
+            document.getElementById('game-section').classList.remove('hidden');
+            
+            // 开始错题复习
+            startNewRound();
         }
     </script>
 </body>
 </html>
-    
