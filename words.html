@@ -318,6 +318,7 @@
         }
 
         // 处理文件上传并导入数据库
+             // 处理文件上传并导入数据库 (修改版)
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -335,28 +336,42 @@
             reader.onload = async function(e) {
                 try {
                     const content = e.target.result;
-                    const words = parseCsvData(content);
+                    const words = parseCsvData(content); // 解析CSV数据
 
-                    // 导入数据库（采用追加模式）
-                    showFileStatus('正在导入数据库...');
-                    const response = await fetch(`${API_BASE_URL}/words/import`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ words, append: true }) // 添加append参数确保不覆盖
-                    });
+                    showFileStatus('正在同步到 Supabase 数据库...');
 
-                    if (!response.ok) throw new Error('导入数据库失败');
+                    // --- 关键修改：使用 Supabase 客户端将数据 upsert 到数据库 ---
+                    // 使用 upsert: 如果 id 存在则更新，不存在则插入
+                    // 注意：确保你的 Supabase 表 'words' 允许这些操作（检查 RLS 策略）
+                    const { data, error } = await supabase
+                        .from('words')
+                        .upsert(words, {
+                            onConflict: 'id', // 指定冲突解决依据的字段是 'id'
+                            // ignoreDuplicates: true // 如果只想插入新记录且忽略冲突，可以添加此选项，但这通常与 upsert 结合 onConflict 使用方式不同，upsert 本身就是处理冲突的
+                        });
 
-                    dataArray = words;
+                    if (error) {
+                        console.error('Supabase 导入失败:', error);
+                        throw new Error(`导入数据库失败: ${error.message}`);
+                    }
+                    // --- 修改结束 ---
+
+                    console.log('数据同步成功:', data);
+                    dataArray = words; // 或者可以从 Supabase 重新加载一次以确保数据一致性
                     totalItemsCount = dataArray.length;
 
-                    showFileStatus('文件导入成功，正在准备游戏...');
+                    showFileStatus('文件同步成功，正在准备游戏...');
                     setTimeout(() => {
                         document.getElementById('file-upload-section').classList.add('hidden');
                         document.getElementById('game-section').classList.remove('hidden');
-                        startNewRound();
+                        // 从 Supabase 重新加载数据以确保获取到最新的 practice_count 等信息
+                        loadSavedWords(); // 这里调用 loadSavedWords 来加载刚同步的数据并开始游戏
+                        // 或者如果你确定 words 数组就是全部需要的数据，可以直接调用 startNewRound() 和 updateGlobalStats()
+                        // startNewRound();
+                        // updateGlobalStats();
                     }, 1000);
                 } catch (error) {
+                    console.error('文件处理或同步错误:', error);
                     showFileError(`文件处理错误: ${error.message}`);
                 }
             };
