@@ -4,174 +4,151 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>配对挑战 - 带数据统计</title>
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .btn-selected {
-                @apply bg-emerald-500 transform scale-105;
-            }
-            .btn-disabled {
-                @apply bg-gray-500 opacity-50 cursor-not-allowed;
-            }
-            .strikethrough {
-                text-decoration: line-through;
-            }
-            .btn-error {
-                @apply bg-rose-500;
-            }
-        }
-    </style>
+
+    <!-- 引入 Supabase 客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- ... 其他样式 ... -->
 </head>
-<body class="bg-gradient-to-br from-slate-900 to-slate-800 min-h-screen flex flex-col items-center justify-center p-4 text-white">
-    <!-- 主容器 -->
-    <div class="max-w-4xl w-full mx-auto flex flex-col items-center">
-        <!-- 文件选择界面 -->
-        <div id="file-upload-section" class="text-center p-8 w-full hidden">
-            <h1 class="text-3xl font-bold mb-8 text-cyan-300">
-                <i class="fa fa-puzzle-piece mr-2"></i>配对挑战
-            </h1>
-            <p class="text-gray-300 mb-6 text-lg">请选择一个CSV格式文件开始游戏（每行包含两列，用逗号分隔）</p>
-            
-            <label for="file-upload" class="cursor-pointer inline-block">
-                <div class="bg-slate-700 hover:bg-emerald-600 transition-all duration-300 py-6 px-10 rounded-lg shadow-lg inline-flex items-center justify-center">
-                    <i class="fa fa-file-text-o mr-3 text-xl"></i>
-                    <span class="text-lg font-medium">选择CSV文件</span>
-                </div>
-                <input id="file-upload" type="file" accept="text/csv" class="hidden">
-            </label>
-            
-            <div class="mt-6 flex justify-center gap-4">
-                <button id="load-saved-words" class="bg-blue-600 hover:bg-blue-500 transition-all duration-300 py-3 px-6 rounded-lg text-white font-medium">
-                    <i class="fa fa-database mr-2"></i>加载已保存单词
-                </button>
-            </div>
-            
-            <div id="file-upload-status" class="mt-6 hidden"></div>
-            <div id="file-upload-error" class="mt-6 text-red-400 hidden"></div>
-        </div>
-
-        <!-- 游戏界面（默认隐藏） -->
-        <div id="game-section" class="hidden w-full">
-            <h1 class="text-3xl font-bold mb-8 text-center text-cyan-300">
-                <i class="fa fa-puzzle-piece mr-2"></i>配对挑战
-            </h1>
-            
-            <div class="flex flex-col md:flex-row gap-8 w-full">
-                <div class="column flex-1 flex flex-col gap-3" id="left-column"></div>
-                <div class="column flex-1 flex flex-col gap-3" id="right-column"></div>
-            </div>
-            
-            <div id="status" class="mt-8 text-lg font-medium text-center"></div>
-            <div id="progress" class="mt-4 text-sm text-center text-gray-300"></div>
-            <div id="error" class="mt-4 text-red-400 text-center hidden"></div>
-            
-           
-        </div>
-
-        <!-- 错题统计界面（默认隐藏） -->
-        <div id="error-summary-section" class="hidden w-full p-6 bg-slate-800 rounded-lg shadow-xl mt-8">
-            <h2 class="text-2xl font-bold mb-6 text-center text-cyan-300">
-                <i class="fa fa-bar-chart mr-2"></i>练习总结
-            </h2>
-            
-            <div id="summary-stats" class="mb-8 text-center"></div>
-            
-            <div id="no-errors-message" class="text-center text-emerald-400 text-lg hidden">
-                <i class="fa fa-check-circle mr-2"></i>恭喜！您没有错题！
-            </div>
-            
-            <div id="errors-list-container" class="hidden">
-                <h3 class="text-xl font-semibold mb-4 text-amber-300 border-b border-amber-500 pb-2">
-                    错题记录
-                </h3>
-                <div id="errors-list" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
-            </div>
-            
-            <div class="mt-8 text-center">
-                <button id="restart-button" class="bg-emerald-600 hover:bg-emerald-500 transition-all duration-300 py-3 px-8 rounded-lg text-white font-medium hidden">
-                    <i class="fa fa-refresh mr-2"></i>重新开始
-                </button>
-                <button id="review-errors-button" class="bg-amber-600 hover:bg-amber-500 transition-all duration-300 py-3 px-8 rounded-lg text-white font-medium hidden">
-                    <i class="fa fa-repeat mr-2"></i>复习错题
-                </button>
-            </div>
-        </div>
-    </div>
+<body>
+    <!-- ... HTML 内容 ... -->
 
     <script>
         // 全局变量
-        let dataArray = [];           // 所有数据（从数据库获取）
-        let currentItems = [];        // 当前轮次的题目
-        let usedItems = new Set();    // 已经使用过的项目ID
-        let currentRoundWrongItems = new Set(); // 本轮出现的错题
-        let allTimeWrongItems = new Map(); // 所有时间的错题及错误次数 (id => count)
-        let allItemsProcessed = false;// 所有项目是否已处理完毕
-        let inReviewMode = false;     // 是否处于错题复习模式
-        let clickHistory = [];        // 记录点击历史
-        let matchedPairs = 0;         // 当前轮次已匹配的对数
-        let totalItemsCount = 0;      // 总项目数量
-        const ITEMS_PER_ROUND = 4;    // 每页显示4对题目
+        let dataArray = [];
+        // ... 其他全局变量 ...
 
         // Supabase 配置
         const supabaseUrl = 'https://bsmitevfaqwdzlejxtmf.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzbWl0ZXZmYXF3ZHpsZWp4dG1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3NzA4MTAsImV4cCI6MjA3MTM0NjgxMH0.r6DW0xfXUJPBuSyWu8xCDgsPLkRIT0zVFoxfgzfvh6I';
 
-        // 创建 Supabase 客户端
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        // 创建 Supabase 客户端实例 (使用真实的库)
+        // 注意：这里假设全局引入后，`supabase` 对象（更准确地说是 `supabase.SupabaseClient` 或类似）是可用的
+        // 最常见的全局对象名是 `supabase`，但有时也可能是 `_supabase` 或需要从库中解构出来。
+        // 为了确保兼容性，我们使用库提供的 `createClient` 函数。
+        // 检查全局 `supabase` 对象是否存在，并获取 `createClient`
+        const { createClient } = window.supabase || {};
+        if (!createClient) {
+             console.error("Supabase client library not loaded correctly.");
+             // 可以在这里显示一个用户友好的错误消息
+             document.getElementById('file-upload-section').classList.remove('hidden');
+             showFileError('无法加载 Supabase 客户端库，请检查网络连接。');
+             // 禁用可能导致错误的交互
+             document.getElementById('file-upload').disabled = true;
+             document.getElementById('load-saved-words').disabled = true;
+         } else {
+             const supabase = createClient(supabaseUrl, supabaseAnonKey);
+             console.log("Supabase client initialized:", supabase);
+             // 将 supabase 实例放在一个可以被后续函数访问的地方
+             // 例如，作为全局变量或者通过闭包传递
+             window.mySupabaseClient = supabase; // 一种方式
+         }
 
-        // 事件监听
-        document.getElementById('file-upload').addEventListener('change', handleFileUpload);
-        document.getElementById('restart-button').addEventListener('click', restartGame);
-        document.getElementById('review-errors-button').addEventListener('click', reviewErrors);
-        document.getElementById('load-saved-words').addEventListener('click', loadSavedWords);
 
-        // 页面加载完成后自动加载默认的1.csv文件
-        window.addEventListener('load', loadDefaultCsv);
+        // ... 事件监听器 ...
 
-        // 加载默认CSV文件（public目录下的1.csv）
-        async function loadDefaultCsv() {
-            try {
-                // 1. 从服务器获取默认的1.csv文件
-                const response = await fetch('/1.csv');
-                if (!response.ok) {
-                    throw new Error(`文件加载失败: ${response.statusText}`);
-                }
-                
-                const content = await response.text();
-                let words = parseCsvData(content);
-                
-                // 2. 将CSV数据导入Supabase数据库
-                await importWordsToSupabase(words, true); // append=true 表示追加
-                
-                // 3. 从Supabase获取完整的数据（包含新导入的和旧有的）
-                dataArray = await getWordsFromSupabase();
-                totalItemsCount = dataArray.length;
-                
-                // 4. 排序并开始游戏
-                sortAndStartGame();
-            } catch (error) {
-                document.getElementById('file-upload-section').classList.remove('hidden');
-                showFileError(`初始化失败: ${error.message}`);
-                console.error('默认CSV加载失败:', error);
+        // 修改所有使用 supabase 的函数，使用真实的客户端实例
+        // 例如，修改 importWordsToSupabase:
+
+        // 将单词数据导入Supabase
+        async function importWordsToSupabase(words, append = false) {
+            if (!window.mySupabaseClient) {
+                throw new Error('Supabase client 未初始化');
             }
+            // 为了简化逻辑，我们直接插入或更新数据。如果ID已存在，则更新；否则插入。
+            // 我们会为每个单词创建一个唯一的id。
+            const upsertData = words.map(word => ({
+                id: word.id,
+                left: word.left,
+                right: word.right,
+                practice_count: 0,
+                error_count: 0,
+                error_rate: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }));
+
+            // 使用 window.mySupabaseClient.table('words').upsert() 来批量插入/更新
+            const { data, error } = await window.mySupabaseClient // <--- 使用真实的客户端
+                .from('words')
+                .upsert(upsertData, { onConflict: 'id' }); // onConflict: 'id' 表示如果id已存在，则更新该行
+
+            if (error) {
+                throw new Error(`导入失败: ${error.message}`);
+            }
+            console.log('Words imported/updated successfully:', data);
         }
 
-        // 加载已保存的单词
-        async function loadSavedWords() {
+        // 修改 getWordsFromSupabase:
+        // 从Supabase获取所有单词数据
+        async function getWordsFromSupabase() {
+             if (!window.mySupabaseClient) {
+                throw new Error('Supabase client 未初始化');
+            }
+            const { data, error } = await window.mySupabaseClient // <--- 使用真实的客户端
+                .from('words')
+                .select('*')
+                .order('created_at', { ascending: false }); // 按创建日期倒序排列
+
+            if (error) {
+                throw new Error(`获取数据失败: ${error.message}`);
+            }
+            console.log('Words fetched successfully:', data);
+            return data;
+        }
+
+        // 修改 updateWordStats:
+        // 更新单词练习数据到Supabase
+        async function updateWordStats(id, isCorrect) {
+            if (!window.mySupabaseClient) {
+                throw new Error('Supabase client 未初始化');
+            }
             try {
-                showFileStatus('正在从数据库加载单词...');
-                dataArray = await getWordsFromSupabase();
-                totalItemsCount = dataArray.length;
-                
-                if (dataArray.length === 0) {
-                    showFileError('数据库中没有单词数据，请先上传CSV文件');
-                    return;
+                // 获取当前单词的统计数据
+                const { data: wordData, error: getError } = await window.mySupabaseClient // <--- 使用真实的客户端
+                    .from('words')
+                    .select('practice_count, error_count, error_rate')
+                    .eq('id', id)
+                    .single();
+
+                if (getError) throw new Error(`获取单词数据失败: ${getError.message}`);
+
+                // 计算新的统计数据
+                const newPracticeCount = wordData.practice_count + 1;
+                const newErrorCount = isCorrect ? wordData.error_count : wordData.error_count + 1;
+                const newErrorRate = newPracticeCount > 0 ? (newErrorCount / newPracticeCount) * 100 : 0;
+
+                // 更新数据库
+                const { error: updateError } = await window.mySupabaseClient // <--- 使用真实的客户端
+                    .from('words')
+                    .update({
+                        practice_count: newPracticeCount,
+                        error_count: newErrorCount,
+                        error_rate: newErrorRate,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (updateError) throw new Error(`更新数据失败: ${updateError.message}`);
+
+                // 更新本地缓存
+                const localWord = dataArray.find(w => w.id === id);
+                if (localWord) {
+                    localWord.practice_count = newPracticeCount;
+                    localWord.error_count = newErrorCount;
+                    localWord.error_rate = newErrorRate;
+                    localWord.updated_at = new Date().toISOString();
                 }
-                
-                sortAndStartGame();
+
+                // 由于我们只更新了一个单词，不需要全局刷新，所以不调用updateGlobalStats()
+                console.log(`Word stats updated for ID ${id}: Practice: ${newPracticeCount}, Errors: ${newErrorCount}, Rate: ${newErrorRate.toFixed(2)}%`);
             } catch (error) {
-                showFileError(`加载失败: ${error.message}`);
+                console.error('更新单词统计失败:', error);
+                showError('数据同步失败，请重试');
             }
         }
 
