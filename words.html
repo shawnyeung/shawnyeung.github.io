@@ -176,9 +176,14 @@
         }
 
         // 处理文件上传并导入Supabase
+                // 处理文件上传并导入数据库
         async function handleFileUpload(event) {
             const file = event.target.files[0];
-            if (!file) return;
+            if (!file) {
+                // 用户可能取消了选择，这不是错误
+                console.log('No file selected.');
+                return;
+            }
 
             // 验证文件类型
             if (!file.name.endsWith('.csv')) {
@@ -193,16 +198,27 @@
             reader.onload = async function(e) {
                 try {
                     const content = e.target.result;
-                    const words = parseCsvData(content);
-                    
+                    // --- 添加检查 ---
+                    if (typeof content !== 'string') {
+                        throw new Error('读取文件内容失败');
+                    }
+                    // --- 结束添加检查 ---
+                    const words = parseCsvData(content); // 使用增强后的函数
+
+                    // --- 添加检查：确保 words 是数组且不为空 ---
+                    if (!Array.isArray(words) || words.length === 0) {
+                         throw new Error('解析后的单词列表为空或无效');
+                    }
+                    // --- 结束添加检查 ---
+
                     // 导入数据库（采用追加模式）
                     showFileStatus('正在导入数据库...');
-                    await importWordsToSupabase(words, true); // append=true 表示追加
-                    
-                    // 重新加载所有数据
+                    await importWordsToSupabase(words, true); // 添加append参数确保不覆盖
+
+                    // 重新加载所有数据 (确保使用最新的数据)
                     dataArray = await getWordsFromSupabase();
                     totalItemsCount = dataArray.length;
-                    
+
                     showFileStatus('文件导入成功，正在准备游戏...');
                     setTimeout(() => {
                         document.getElementById('file-upload-section').classList.add('hidden');
@@ -210,11 +226,13 @@
                         startNewRound();
                     }, 1000);
                 } catch (error) {
+                    console.error('File processing error:', error); // 在控制台打印详细错误
                     showFileError(`文件处理错误: ${error.message}`);
                 }
             };
 
             reader.onerror = function() {
+                console.error('File read error:', reader.error);
                 showFileError('文件读取失败，请重试');
             };
 
@@ -222,31 +240,72 @@
         }
 
         // 解析CSV数据
+              // 解析CSV数据 (增强健壮性)
         function parseCsvData(content) {
+            // 1. 检查 content 是否为字符串
+            if (typeof content !== 'string') {
+                console.error('parseCsvData received non-string content:', content);
+                throw new Error('文件内容格式无效');
+            }
+
             const words = [];
             const lines = content.trim().split('\n');
-            
+
+            // 2. 检查 lines 是否为数组
+            if (!Array.isArray(lines)) {
+                console.error('Failed to split content into lines:', content);
+                throw new Error('文件内容解析失败');
+            }
+
             if (lines.length === 0) {
                 throw new Error('文件内容为空');
             }
 
             lines.forEach((line, index) => {
-                const parts = line.trim().split(',').map(part => part.trim());
-                if (parts.length < 2) {
-                    throw new Error(`第${index + 1}行格式错误，需要至少两列数据`);
+                // 3. 检查 line 是否为字符串 (虽然 split 应该保证，但防御性编程)
+                if (typeof line !== 'string') {
+                    console.warn(`Skipping non-string line at index ${index}:`, line);
+                    return; // 跳过非字符串行
                 }
-                
-                const left = parts[0];
-                const right = parts.slice(1).join(','); // 允许右侧内容包含逗号
-                const id = generateId(left, right);
-                
-                words.push({ id, left, right });
+
+                const parts = line.trim().split(',').map(part => part.trim());
+
+                // 4. 检查 parts 是否为数组且长度足够
+                if (!Array.isArray(parts) || parts.length < 2) {
+                    console.warn(`Skipping invalid line ${index + 1} (not enough columns or parsing error):`, line);
+                    // 可以选择抛出错误或跳过该行
+                    // throw new Error(`第${index + 1}行格式错误，需要至少两列数据`);
+                    return; // 这里选择跳过该行
+                }
+
+                // 5. 确保 parts 有至少两个元素后再访问
+                if (parts.length >= 2) {
+                    const left = parts[0];
+                    // 允许右侧内容包含逗号，将剩余部分合并
+                    const right = parts.slice(1).join(',');
+                    const id = generateId(left, right);
+
+                    // 6. 检查 id, left, right 是否有效 (可选，但推荐)
+                    if (typeof id === 'string' && typeof left === 'string' && typeof right === 'string' &&
+                        left.length > 0 && right.length > 0) {
+                         words.push({ id, left, right });
+                    } else {
+                         console.warn(`Skipping line ${index + 1} due to invalid data after parsing:`, { id, left, right });
+                    }
+                }
             });
 
+            // 7. 检查最终结果
             if (words.length === 0) {
-                throw new Error('未找到有效的数据，请检查文件格式');
+                // 如果所有行都被跳过，可以抛出一个更具体的错误
+                if (lines.length > 0) {
+                     console.warn('No valid words found after parsing all lines.');
+                     throw new Error('文件中未找到有效的单词对，请检查文件格式（每行应至少包含两个由逗号分隔的非空列）。');
+                }
+                // 如果文件确实为空，之前的检查会捕获
             }
 
+            console.log('Parsed words:', words); // 添加日志以便调试
             return words;
         }
 
