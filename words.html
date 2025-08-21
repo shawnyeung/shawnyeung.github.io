@@ -895,9 +895,9 @@ function getCurrentRoundItems(previousWrongItems) {
 // const supabaseKey = 'eyJhb...'; // 你的 anon key
 
 // 修改为:
-const supabaseUrl = 'https://bsmitevfaqwdzlejxtmf.supabase.co'; // 移除末尾空格
+const supabaseUrl = 'https://bsmitevfaqwdzlejxtmf.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzbWl0ZXZmYXF3ZHpsZWp4dG1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3NzA4MTAsImV4cCI6MjA3MTM0NjgxMH0.r6DW0xfXUJPBuSyWu8xCDgsPLkRIT0zVFoxfgzfvh6I';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey); // 注意是 supabase.createClient
+const supabase = supabase.createClient(supabaseUrl, supabaseKey); // 注意这里的变化
 
 // 假设你的表名为 'words'
 async function fetchWords() {
